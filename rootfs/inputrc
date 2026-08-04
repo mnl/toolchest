@@ -1,0 +1,8 @@
+# completion
+set completion-ignore-case on
+set completion-map-case on
+set colored-stats on
+set colored-completion-prefix on
+set blink-matching-paren on
+set show-all-if-ambiguous on
+set visible-stats
