@@ -1,6 +1,8 @@
-FROM alpine:3.23
+FROM docker.io/alpine:3.23
 
-RUN apk --no-cache add \
+RUN : Add tools from Alpine \
+		&& \
+	apk --no-cache add \
 	age=~1.2 \
 	bash-completion=~2 \
 	bash=~5.3 \
@@ -49,7 +51,9 @@ RUN apk --no-cache add \
 ADD --checksum=sha256:0970549eb4a306f8825a84145a2534153badb4d7dcf3febd1967c706367c3d0e \
 	https://github.com/wagoodman/dive/releases/download/v0.13.1/dive_0.13.1_linux_amd64.tar.gz \
 	/tmp/dive.tar.gz
-RUN mkdir -p /tmp/dive \
+RUN : Install Dive binary \
+		&& \
+	mkdir -p /tmp/dive \
 	&& tar -xzf /tmp/dive.tar.gz -C /tmp/dive \
 	&& install -Dm755 /tmp/dive/dive /usr/local/bin/dive \
 	&& install -Dm644 /tmp/dive/LICENSE /usr/share/licenses/dive/LICENSE \
@@ -60,14 +64,18 @@ RUN mkdir -p /tmp/dive \
 ADD --checksum=sha256:8f02f4ebe72d9e3098c646b77f7bc53ec8a8c1fb51ed042db06b739d08e56af8 \
 	https://github.com/pemistahl/grex/releases/download/v1.4.6/grex-v1.4.6-x86_64-unknown-linux-musl.tar.gz \
 	/tmp/grex.tar.gz
-RUN tar -xzf /tmp/grex.tar.gz -C /usr/local/bin/ grex \
+RUN : Install Grex binary \
+		&& \
+	tar -xzf /tmp/grex.tar.gz -C /usr/local/bin/ grex \
 	&& rm -rf /tmp/grex.tar.gz
 
 # Add stern
 ADD --checksum=sha256:7754adfa653939240f7d20fff4ada9b69cda40c9e70732301f67bb8045f1ef3e \
 	https://github.com/stern/stern/releases/download/v1.34.0/stern_1.34.0_linux_amd64.tar.gz \
 	/tmp/stern.tar.gz
-RUN mkdir -p /tmp/stern \
+RUN : Install Stern binary \
+		&& \
+	mkdir -p /tmp/stern \
 	&& tar -xzf /tmp/stern.tar.gz -C /tmp/stern \
 	&& install -Dm755 /tmp/stern/stern /usr/local/bin/stern \
 	&& install -Dm644 /tmp/stern/LICENSE /usr/share/licenses/stern/LICENSE \
@@ -78,7 +86,9 @@ RUN mkdir -p /tmp/stern \
 ADD --checksum=sha256:9ce999f8d2de03fc03968b29d743077a58783e545e5eaa53917ca177352d0e59 \
 	https://github.com/oras-project/oras/releases/download/v1.3.3/oras_1.3.3_linux_amd64.tar.gz \
 	/tmp/oras.tar.gz
-RUN mkdir -p /tmp/oras \
+RUN : Install Oras binary \
+		&& \
+	mkdir -p /tmp/oras \
 	&& tar -xzf /tmp/oras.tar.gz -C /tmp/oras \
 	&& install -Dm755 /tmp/oras/oras /usr/local/bin/oras \
 	&& install -Dm644 /tmp/oras/LICENSE /usr/share/licenses/oras/LICENSE \
@@ -89,7 +99,9 @@ RUN mkdir -p /tmp/oras \
 ADD --checksum=sha256:b20a00c1cb82ab81ec32696766d4076e99b4cb5ca0823a71767ba64dbea0f263 \
 	https://github.com/fullstorydev/grpcurl/releases/download/v1.9.3/grpcurl_1.9.3_linux_arm64.tar.gz \
 	/tmp/grpcurl.tar.gz
-RUN mkdir -p /tmp/grpcurl \
+RUN : Install Grpcurl binary \
+		&& \
+	mkdir -p /tmp/grpcurl \
 	&& tar -xzf /tmp/grpcurl.tar.gz -C /tmp/grpcurl \
 	&& install -Dm755 /tmp/grpcurl/grpcurl /usr/local/bin/grpcurl \
 	&& install -Dm644 /tmp/grpcurl/LICENSE /usr/share/licenses/grpcurl/LICENSE \
@@ -98,4 +110,39 @@ RUN mkdir -p /tmp/grpcurl \
 COPY rootfs/bashrc /root/.bashrc
 COPY rootfs/inputrc /root/.inputrc
 
-CMD "/bin/bash"
+RUN : Toolbx required packages \
+		&& \
+	 apk add --no-cache \
+	findutils \
+	libc-utils \
+	libcap-utils \
+	ncurses-terminfo-base \
+	shadow \
+	sudo \
+	util-linux \
+	&& addgroup -S wheel 2>/dev/null || true
+
+RUN : Toolbx file and directories \
+		&& \
+	printf '%%wheel ALL=(ALL:ALL) NOPASSWD: ALL\n' \
+		>/etc/sudoers.d/toolbox \
+	&& chmod 0440 /etc/sudoers.d/toolbox \
+	&& mkdir -p \
+		/etc/krb5.conf.d \
+		/etc/ld.so.conf.d \
+		/etc/pkcs11/modules \
+		/usr/share/empty \
+	&& echo 'VARIANT="Toolbx image"' >> /etc/os-release \
+	&& echo IMAGE_ID="toolchest" >> /etc/os-release \
+	&& ln -s /etc/terminfo /usr/share/terminfo \
+	&& find /home /media -mindepth 1 -delete
+
+LABEL com.github.containers.toolbox="true" \
+	org.opencontainers.image.description="A toolchest of useful programs" \
+	org.opencontainers.image.authors=mnl \
+	org.opencontainers.image.title=toolchest
+
+USER 0
+
+ENTRYPOINT []
+CMD ["/bin/bash"]

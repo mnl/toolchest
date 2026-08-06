@@ -23,6 +23,7 @@ Containerfile: .podman-host-ok
 	echo >> .buildid-$(name).previous.stamp
 	buildah bud --layers -f $< \
 		--annotation=org.opencontainers.image.version="$(tag)" \
+		--annotation=org.opencontainers.image.title="$(name)" \
 		--annotation=org.opencontainers.image.revision="$(shell git rev-parse --short HEAD)" \
 		--created-annotation \
 		--iidfile=.buildid-$(name).stamp \
