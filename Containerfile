@@ -33,6 +33,7 @@ RUN : Add tools from Alpine \
 	kustomize=~5.7 \
 	moreutils=~0.70 \
 	procs=~0.14 \
+	pv=~1.10 \
 	rclone=~1.72 \
 	ripgrep=~15 \
 	sd=~1 \
