@@ -97,8 +97,8 @@ RUN : Install Oras binary \
 	oras completion bash > /usr/share/bash-completion/completions/oras
 
 # Add grpcurl
-ADD --checksum=sha256:b20a00c1cb82ab81ec32696766d4076e99b4cb5ca0823a71767ba64dbea0f263 \
-	https://github.com/fullstorydev/grpcurl/releases/download/v1.9.3/grpcurl_1.9.3_linux_arm64.tar.gz \
+ADD --checksum=sha256:a926b62a85787ccf73ef8736b3ae554f1242e39d92bb8767a79d6dd23b11d1d5 \
+	https://github.com/fullstorydev/grpcurl/releases/download/v1.9.3/grpcurl_1.9.3_linux_x86_64.tar.gz \
 	/tmp/grpcurl.tar.gz
 RUN : Install Grpcurl binary \
 		&& \
