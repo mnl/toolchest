@@ -43,6 +43,9 @@ jobs:
           tags: |
             type=raw,value=latest
             type=sha,prefix=sha-,format=short
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
           labels: |
             org.opencontainers.image.title=toolchest
             org.opencontainers.image.description=A toolchest of useful programs
@@ -80,3 +83,56 @@ jobs:
         env:
           DIGEST: ${{ steps.build.outputs.digest }}
         run: cosign sign --yes "${IMAGE}@${DIGEST}"
+
+  update-floating-tags:
+    needs: build
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Update floating tags
+        env:
+          VERSION: ${{ github.ref_name }}
+        run: |
+          if [[ ! "$VERSION" =~ ^v([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
+              echo "Ignoring non-SemVer tag: $VERSION"
+              exit 0
+          fi
+
+          major="${BASH_REMATCH[1]}"
+          minor="${BASH_REMATCH[2]}"
+
+          if (( major == 0 )); then
+              echo "Ignoring unstable version: $VERSION"
+              exit 0
+          fi
+
+          major_tag="v${major}"
+          minor_tag="v${major}.${minor}"
+
+          latest_major="$(
+              git tag --list "v${major}.*.*" |
+                  sort -V |
+                  tail -n1
+          )"
+
+          latest_minor="$(
+              git tag --list "v${major}.${minor}.*" |
+                  sort -V |
+                  tail -n1
+          )"
+
+          git tag --force "$major_tag" "$latest_major"
+          git tag --force "$minor_tag" "$latest_minor"
+
+          git push --force origin \
+              "refs/tags/${major_tag}" \
+              "refs/tags/${minor_tag}"
+
