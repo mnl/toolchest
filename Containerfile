@@ -12,7 +12,7 @@ RUN : Add tools from Alpine \
 	coreutils=~9.8 \
 	cosign=~2 \
 	crane=~0.20 \
-	curl=~8.20 \
+	curl=~8 \
 	delta=~0.18 \
 	doggo=~1.1 \
 	dust=~1.2 \
